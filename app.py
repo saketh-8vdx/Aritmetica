@@ -69,9 +69,14 @@ openai.api_key = st.secrets["openai"]["api_key"]
 
 
 class CustomBedrockEmbeddings(BedrockEmbeddings):
-    def __init__(self, client=None):
-        # Initialize with the client we already created
-        self.client = client or bedrock
+    def __init__(self, client=None, **kwargs):
+        # Pass credentials through super().__init__
+        super().__init__(
+            client=client,
+            region_name="us-east-1",
+            model_id="amazon.titan-embed-text-v2:0",
+            **kwargs
+        )
 
     def embed_documents(self, texts):
         # Use concurrent processing to embed multiple documents at the same time
