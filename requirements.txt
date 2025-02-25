@@ -13,3 +13,4 @@ tiktoken
 deep-translator
 streamlit
 docx2pdf
+python-docx
