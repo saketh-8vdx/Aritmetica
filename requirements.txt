@@ -5,14 +5,10 @@ pillow
 pillow_heif
 requests
 fpdf
-langchain>=0.2.0
-langchain-core>=0.2.0
-langfuse==2.44.1
+langchain
 openai==0.28
 scikit-learn
 llama-parse
-llama-index
-python-docx
 tiktoken
 deep-translator
 streamlit
