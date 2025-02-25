@@ -38,7 +38,41 @@ parser = LlamaParse(
 openai.api_key = st.secrets["openai"]["api_key"]
 
 
+# class CustomBedrockEmbeddings(BedrockEmbeddings):
+#
+#     def embed_documents(self, texts):
+#         # Use concurrent processing to embed multiple documents at the same time
+#         with ThreadPoolExecutor() as executor:
+#             futures = [executor.submit(self.embed_query, text) for text in texts]
+#             results = [future.result() for future in as_completed(futures)]
+#         return results
+#
+#     def embed_query(self, text):
+#         body = json.dumps({
+#             "inputText": text,
+#             "dimensions": 1024,
+#             "normalize": True
+#         })
+#
+#         response = bedrock.invoke_model(
+#             body=body,
+#             modelId='amazon.titan-embed-text-v2:0',
+#             contentType='application/json',
+#             accept='application/json'
+#         )
+#
+#         response_body = json.loads(response['body'].read())
+#         return response_body['embedding']
+#
+#
+# embeddings = CustomBedrockEmbeddings()
+
+
 class CustomBedrockEmbeddings(BedrockEmbeddings):
+    def __init__(self, client=None):
+        # Initialize with the client we already created
+        self.client = client or bedrock
+
     def embed_documents(self, texts):
         # Use concurrent processing to embed multiple documents at the same time
         with ThreadPoolExecutor() as executor:
@@ -47,24 +81,34 @@ class CustomBedrockEmbeddings(BedrockEmbeddings):
         return results
 
     def embed_query(self, text):
+        # Ensure text is a string and not empty
+        if not isinstance(text, str) or not text.strip():
+            return [0] * 1024  # Return zero vector for empty text
+
         body = json.dumps({
             "inputText": text,
             "dimensions": 1024,
             "normalize": True
         })
 
-        response = bedrock.invoke_model(
-            body=body,
-            modelId='amazon.titan-embed-text-v2:0',
-            contentType='application/json',
-            accept='application/json'
-        )
+        try:
+            response = self.client.invoke_model(
+                body=body,
+                modelId='amazon.titan-embed-text-v2:0',
+                contentType='application/json',
+                accept='application/json'
+            )
 
-        response_body = json.loads(response['body'].read())
-        return response_body['embedding']
+            response_body = json.loads(response['body'].read())
+            return response_body['embedding']
+        except Exception as e:
+            st.error(f"Error during embedding: {str(e)}")
+            # Return zero vector in case of error
+            return [0] * 1024
 
 
-embeddings = CustomBedrockEmbeddings()
+# Initialize embeddings with the bedrock client
+embeddings = CustomBedrockEmbeddings(client=bedrock)
 
 
 def split_text_with_token_limit(documents, max_tokens=8000, max_chars=49000):
