@@ -24,6 +24,12 @@ import nltk
 nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
 os.makedirs(nltk_data_dir, exist_ok=True)
 nltk.data.path.append(nltk_data_dir)
+try:
+    nltk.download('punkt', download_dir=nltk_data_dir)
+    nltk.download('stopwords', download_dir=nltk_data_dir)
+    # Add any other NLTK resources you need
+except Exception as e:
+    st.warning(f"Could not download NLTK data: {e}")
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
