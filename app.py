@@ -1,4 +1,6 @@
 import nltk
+import os
+import tempfile
 
 nltk_data_dir = os.path.join(tempfile.gettempdir(), 'nltk_data')
 os.makedirs(nltk_data_dir, exist_ok=True)
@@ -25,7 +27,7 @@ from langchain.schema import Document as LangchainDocument
 import tiktoken
 import json
 import streamlit as st
-import tempfile
+
 import os
 from docx2pdf import convert
 from docx import Document
