@@ -1,11 +1,12 @@
 boto3==1.34.13
 faiss-cpu
-langchain-community
+langchain-community==0.0.28
+langchain==0.1.11
+langchain-core==0.2.17
 pillow
 pillow_heif
 requests
 fpdf
-langchain
 openai==0.28
 scikit-learn
 llama-parse
