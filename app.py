@@ -1,3 +1,20 @@
+import nltk
+import os
+
+# Create a custom directory for NLTK data
+nltk_data_dir = os.path.join(os.path.expanduser("~"), "nltk_data")
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir, exist_ok=True)
+
+# Download NLTK resources to the custom directory
+nltk.download("stopwords", download_dir=nltk_data_dir)
+nltk.download("punkt", download_dir=nltk_data_dir)
+# Add any other NLTK resources you need
+
+# Set the NLTK data path
+nltk.data.path.append(nltk_data_dir)
+
+
 import tempfile
 from deep_translator import GoogleTranslator
 import openai
