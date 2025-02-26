@@ -14,4 +14,3 @@ deep-translator
 streamlit
 docx2pdf
 python-docx
-nltk
