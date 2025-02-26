@@ -16,24 +16,23 @@ import os
 from docx2pdf import convert
 from docx import Document
 import zipfile
-from llama_parse import LlamaParse
+
 import nltk
 
-# Create a writable directory for NLTK data
-nltk_data_dir = os.path.join(tempfile.gettempdir(), "nltk_data")
+nltk_data_dir = os.path.join(tempfile.gettempdir(), 'nltk_data')
 os.makedirs(nltk_data_dir, exist_ok=True)
 
-# Set NLTK data path environment variable
-os.environ["NLTK_DATA"] = nltk_data_dir
+# Set the NLTK data path to use our temporary directory
+nltk.data.path.insert(0, nltk_data_dir)
 
-# Download required NLTK resources to the custom directory
+# Download required NLTK resources to the temporary directory
 try:
-    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('punkt', download_dir=nltk_data_dir)
+    nltk.download('stopwords', download_dir=nltk_data_dir, quiet=True)
 
-# Add the custom directory to NLTK's search path
-nltk.data.path.append(nltk_data_dir)
+
+from llama_parse import LlamaParse
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
