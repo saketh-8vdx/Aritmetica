@@ -1,18 +1,46 @@
-import nltk
 import os
 import tempfile
+import nltk
 
 nltk_data_dir = os.path.join(tempfile.gettempdir(), 'nltk_data')
 os.makedirs(nltk_data_dir, exist_ok=True)
-
-# Set the NLTK data path to use our temporary directory
 nltk.data.path.insert(0, nltk_data_dir)
 
-# Download required NLTK resources to the temporary directory
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', download_dir=nltk_data_dir, quiet=True)
+
+def safe_nltk_download(resource, download_dir):
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Check if resource already exists
+            try:
+                nltk.data.find(f'tokenizers/{resource}')
+                print(f"Resource {resource} already exists")
+                return True
+            except LookupError:
+                pass
+
+            # Try to download
+            nltk.download(resource, download_dir=download_dir, quiet=True)
+            return True
+        except Exception as e:
+            print(f"Download attempt {attempt + 1} failed: {str(e)}")
+            # Clean up potentially corrupted files
+            resource_dir = os.path.join(download_dir, 'tokenizers', resource)
+            if os.path.exists(resource_dir):
+                import shutil
+                shutil.rmtree(resource_dir, ignore_errors=True)
+
+            # Wait before retrying
+            import time
+            time.sleep(1)
+
+    print(f"Failed to download {resource} after {max_retries} attempts")
+    return False
+
+
+# Download required NLTK resources safely
+safe_nltk_download('punkt', nltk_data_dir)
+safe_nltk_download('stopwords', nltk_data_dir)
 
 from deep_translator import GoogleTranslator
 import openai
