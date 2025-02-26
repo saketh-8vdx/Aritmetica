@@ -19,6 +19,11 @@ from docx2pdf import convert
 from docx import Document
 import zipfile
 from llama_parse import LlamaParse
+import nltk
+
+temp_dir = tempfile.mkdtemp()
+nltk.download('stopwords', download_dir=temp_dir)
+
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
