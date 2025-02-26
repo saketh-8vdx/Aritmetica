@@ -1,3 +1,17 @@
+import nltk
+
+nltk_data_dir = os.path.join(tempfile.gettempdir(), 'nltk_data')
+os.makedirs(nltk_data_dir, exist_ok=True)
+
+# Set the NLTK data path to use our temporary directory
+nltk.data.path.insert(0, nltk_data_dir)
+
+# Download required NLTK resources to the temporary directory
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir=nltk_data_dir, quiet=True)
+
 from deep_translator import GoogleTranslator
 import openai
 import boto3
@@ -16,22 +30,6 @@ import os
 from docx2pdf import convert
 from docx import Document
 import zipfile
-
-import nltk
-
-nltk_data_dir = os.path.join(tempfile.gettempdir(), 'nltk_data')
-os.makedirs(nltk_data_dir, exist_ok=True)
-
-# Set the NLTK data path to use our temporary directory
-nltk.data.path.insert(0, nltk_data_dir)
-
-# Download required NLTK resources to the temporary directory
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', download_dir=nltk_data_dir, quiet=True)
-
-
 from llama_parse import LlamaParse
 
 encoder = tiktoken.get_encoding("cl100k_base")
