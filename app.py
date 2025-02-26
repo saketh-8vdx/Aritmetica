@@ -17,19 +17,21 @@ import os
 from docx2pdf import convert
 from docx import Document
 import zipfile
+
 import nltk
 
+# Create a directory you have write access to
+custom_path = os.path.join(os.getcwd(), "nltk_data")
+os.makedirs(custom_path, exist_ok=True)
 
-# Set a custom path for NLTK data
-nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
-os.makedirs(nltk_data_dir, exist_ok=True)
-nltk.data.path.append(nltk_data_dir)
-try:
-    nltk.download('punkt', download_dir=nltk_data_dir)
-    nltk.download('stopwords', download_dir=nltk_data_dir)
-    # Add any other NLTK resources you need
-except Exception as e:
-    st.warning(f"Could not download NLTK data: {e}")
+# Set NLTK data path
+nltk.data.path.insert(0, custom_path)
+
+# Download necessary NLTK data before initializing LlamaParse
+nltk.download('punkt', download_dir=custom_path)
+nltk.download('averaged_perceptron_tagger', download_dir=custom_path)
+nltk.download('stopwords', download_dir=custom_path)
+
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
