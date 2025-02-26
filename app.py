@@ -1,6 +1,4 @@
-import os
 import tempfile
-import nltk
 from deep_translator import GoogleTranslator
 import openai
 import boto3
@@ -18,14 +16,7 @@ import os
 from docx2pdf import convert
 from docx import Document
 import zipfile
-
-import nltk
-
-temp_dir = tempfile.mkdtemp()
-nltk.download('stopwords', download_dir=temp_dir)
-
 from llama_parse import LlamaParse
-
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
