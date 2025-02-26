@@ -28,44 +28,16 @@ bedrock = boto3.client(
     aws_secret_access_key=aws_credentials["AWS_SECRET_ACCESS_KEY"],
     region_name='us-east-1'
 )
+llama_temp_dir = tempfile.mkdtemp()
 parser = LlamaParse(
     api_key=st.secrets["LLAMA_KEY"]["llama_key"],  # Add your API key here if needed
     result_type="markdown",
     verbose=True,
-    language="es"
+    language="es",
+    cache_dir=llama_temp_dir
 )
 
 openai.api_key = st.secrets["openai"]["api_key"]
-
-
-# class CustomBedrockEmbeddings(BedrockEmbeddings):
-#
-#     def embed_documents(self, texts):
-#         # Use concurrent processing to embed multiple documents at the same time
-#         with ThreadPoolExecutor() as executor:
-#             futures = [executor.submit(self.embed_query, text) for text in texts]
-#             results = [future.result() for future in as_completed(futures)]
-#         return results
-#
-#     def embed_query(self, text):
-#         body = json.dumps({
-#             "inputText": text,
-#             "dimensions": 1024,
-#             "normalize": True
-#         })
-#
-#         response = bedrock.invoke_model(
-#             body=body,
-#             modelId='amazon.titan-embed-text-v2:0',
-#             contentType='application/json',
-#             accept='application/json'
-#         )
-#
-#         response_body = json.loads(response['body'].read())
-#         return response_body['embedding']
-#
-#
-# embeddings = CustomBedrockEmbeddings()
 
 
 class CustomBedrockEmbeddings(BedrockEmbeddings):
