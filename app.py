@@ -9,7 +9,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from sklearn.metrics.pairwise import cosine_similarity
 from langchain.schema import Document as LangchainDocument
 import tiktoken
-from llama_parse import LlamaParse
+import os
+import nltk
+
 import json
 import streamlit as st
 import tempfile
@@ -18,6 +20,19 @@ from docx2pdf import convert
 from docx import Document
 import zipfile
 
+# Create a directory for NLTK data
+nltk_data_dir = os.path.expanduser('~/nltk_data')
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir)
+
+# Download required NLTK resources
+nltk.download('stopwords', download_dir=nltk_data_dir)
+nltk.download('punkt', download_dir=nltk_data_dir)  # If you need tokenizers
+
+# Add the download directory to NLTK's search path
+nltk.data.path.append(nltk_data_dir)
+
+from llama_parse import LlamaParse
 
 encoder = tiktoken.get_encoding("cl100k_base")
 MAX_TOKEN_LIMIT = 8000
