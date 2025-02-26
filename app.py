@@ -9,8 +9,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from sklearn.metrics.pairwise import cosine_similarity
 from langchain.schema import Document as LangchainDocument
 import tiktoken
-import os
-import nltk
 import json
 import streamlit as st
 import tempfile
