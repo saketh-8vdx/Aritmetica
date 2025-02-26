@@ -32,7 +32,8 @@ parser = LlamaParse(
     api_key=st.secrets["LLAMA_KEY"]["llama_key"],  # Add your API key here if needed
     result_type="markdown",
     verbose=True,
-    language="es"
+    language="es",
+    cache_dir="/tmp/llama_cache"
 )
 
 openai.api_key = st.secrets["openai"]["api_key"]
