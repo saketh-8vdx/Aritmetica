@@ -358,15 +358,34 @@ def store_embeddings_faiss(chunked_documents, faiss_index_path):
     vectorstore.save_local(faiss_index_path)
 
 
+def rerank_documents(query, documents):
+    query_embedding = np.array(embeddings.embed_query(query)).reshape(1, -1)  # Convert to 2D array
+
+    similarities = []
+    for doc in documents:
+        doc_embedding = np.array(embeddings.embed_query(doc.page_content)).reshape(1, -1)  # Convert to 2D array
+
+        similarity = cosine_similarity(query_embedding, doc_embedding)[0][0]  # Extract the similarity score
+        similarities.append((doc, similarity))
+
+    ranked_docs = [doc for doc, _ in sorted(similarities, key=lambda item: item[1], reverse=True)]
+    return ranked_docs
+
+
 def generate_response_temp(query, retriever):
     try:
         docs = retriever.get_relevant_documents(query)
-        context = "\n\n".join([doc.page_content for doc in docs])
+        rerank_docs = rerank_documents(query, docs)
+        rerank_docs = rerank_docs[:min(30, len(rerank_docs))]
+        context = "\n".join([doc.page_content for doc in rerank_docs])
+
+        # context = "\n\n".join([doc.page_content for doc in docs])
 
         messages = [
             {"role": "system",
              "content": """You are a specialized assistant for analyzing Legal reports. Your task is to generate response
-             based on the input question from the given context for genearting responses for legal reports"""},
+             based on the input question from the given context with high accuracy.Understand the Questions and answer it accurately from the given context.
+             Give the proper explanation for each response"""},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}\n\nAnswer:"}
         ]
 
@@ -387,20 +406,6 @@ def generate_response_temp(query, retriever):
 
     except Exception as e:
         print(f"generate response error: {e}")
-
-
-def rerank_documents(query, documents):
-    query_embedding = np.array(embeddings.embed_query(query)).reshape(1, -1)  # Convert to 2D array
-
-    similarities = []
-    for doc in documents:
-        doc_embedding = np.array(embeddings.embed_query(doc.page_content)).reshape(1, -1)  # Convert to 2D array
-
-        similarity = cosine_similarity(query_embedding, doc_embedding)[0][0]  # Extract the similarity score
-        similarities.append((doc, similarity))
-
-    ranked_docs = [doc for doc, _ in sorted(similarities, key=lambda item: item[1], reverse=True)]
-    return ranked_docs
 
 
 # Streamlit UI
@@ -476,7 +481,7 @@ if submit_button and query:
             st.stop()
 
     with st.spinner("Generating response..."):
-        retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 15})
+        retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 35})
         response = generate_response_temp(query, retriever)
 
         with col2:
