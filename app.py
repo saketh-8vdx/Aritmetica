@@ -24,6 +24,7 @@ import numpy as np
 from langchain.vectorstores import FAISS
 from langchain.embeddings import BedrockEmbeddings
 from langchain.schema import Document
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from sklearn.metrics.pairwise import cosine_similarity
 from langchain.schema import Document as LangchainDocument
@@ -286,11 +287,104 @@ def read_docx(file_path):
     return translated_texts
 
 
+# def find_files(folder_path):
+#     matching_files = []
+#     all_chunks = []
+#     i = 0
+#
+#     extract_to = os.path.join(folder_path, "extracted")
+#     os.makedirs(extract_to, exist_ok=True)
+#
+#     try:
+#         extract_zip_files(folder_path, extract_to)
+#     except Exception as e:
+#         print(f"Error extracting zip files: {e}")
+#
+#     for search_path in [folder_path, extract_to]:
+#         for root, _, files in os.walk(search_path):
+#             for file in files:
+#                 try:
+#                     chunked_documents = []
+#                     file_path = os.path.join(root, file)
+#
+#                     if file.lower().endswith(".pdf"):
+#                         try:
+#                             print("pdf")
+#                             print(file)
+#                             documents = parser.load_data(file_path)
+#                             texts = process_documents_and_translate(documents)
+#                             text_content = "\n".join(texts)
+#                             document = LangchainDocument(page_content=text_content)
+#                             chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
+#                         except Exception as e:
+#                             print(f"Error processing PDF {file}: {e}")
+#
+#                     elif file.lower().endswith(".docx"):
+#                         try:
+#                             print("docx")
+#                             print(file)
+#                             convert(file_path, f"output_{i}.pdf")
+#                             file_path = f"output_{i}.pdf"
+#                             documents = parser.load_data(file_path)
+#                             texts = process_documents_and_translate(documents)
+#                             text_content = "\n".join(texts)
+#                             document = LangchainDocument(page_content=text_content)
+#                             chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
+#                         except Exception as e:
+#                             print(f"Error processing DOCX {file}: {e}")
+#
+#                     i += 1
+#                     print(f"value of i = {i}")
+#                     all_chunks.extend(chunked_documents)
+#                 except Exception as e:
+#                     print(f"Error processing file {file}: {e}")
+#
+#     print(len(all_chunks))
+#     return all_chunks
+
+
+def process_file(file_path, i):
+    chunked_documents = []
+    try:
+        parser = LlamaParse(
+            api_key=st.secrets["LLAMA_KEY"]["llama_key"],
+            result_type="markdown",
+            verbose=True,
+            language="es"
+        )
+
+        if file_path.lower().endswith(".pdf"):
+            try:
+                print("Processing PDF:", file_path)
+                documents = parser.load_data(file_path)
+                texts = process_documents_and_translate(documents)
+                text_content = "\n".join(texts)
+                document = LangchainDocument(page_content=text_content)
+                chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
+            except Exception as e:
+                print(f"Error processing PDF {file_path}: {e}")
+
+        elif file_path.lower().endswith(".docx"):
+            try:
+                print("Processing DOCX:", file_path)
+                output_pdf = f"output_{i}.pdf"
+                convert(file_path, output_pdf)
+                documents = parser.load_data(output_pdf)
+                texts = process_documents_and_translate(documents)
+                text_content = "\n".join(texts)
+                document = LangchainDocument(page_content=text_content)
+                chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
+            except Exception as e:
+                print(f"Error processing DOCX {file_path}: {e}")
+    except Exception as e:
+        print(f"Error processing file {file_path}: {e}")
+
+    return chunked_documents
+
+
 def find_files(folder_path):
     matching_files = []
     all_chunks = []
-    i = 0
-
     extract_to = os.path.join(folder_path, "extracted")
     os.makedirs(extract_to, exist_ok=True)
 
@@ -299,44 +393,17 @@ def find_files(folder_path):
     except Exception as e:
         print(f"Error extracting zip files: {e}")
 
+    file_paths = []
     for search_path in [folder_path, extract_to]:
         for root, _, files in os.walk(search_path):
             for file in files:
-                try:
-                    chunked_documents = []
-                    file_path = os.path.join(root, file)
+                file_paths.append(os.path.join(root, file))
 
-                    if file.lower().endswith(".pdf"):
-                        try:
-                            print("pdf")
-                            print(file)
-                            documents = parser.load_data(file_path)
-                            texts = process_documents_and_translate(documents)
-                            text_content = "\n".join(texts)
-                            document = LangchainDocument(page_content=text_content)
-                            chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
-                        except Exception as e:
-                            print(f"Error processing PDF {file}: {e}")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(process_file, file_paths, range(len(file_paths))))
 
-                    elif file.lower().endswith(".docx"):
-                        try:
-                            print("docx")
-                            print(file)
-                            convert(file_path, f"output_{i}.pdf")
-                            file_path = f"output_{i}.pdf"
-                            documents = parser.load_data(file_path)
-                            texts = process_documents_and_translate(documents)
-                            text_content = "\n".join(texts)
-                            document = LangchainDocument(page_content=text_content)
-                            chunked_documents = split_text_with_token_limit_new([document], max_tokens=8000)
-                        except Exception as e:
-                            print(f"Error processing DOCX {file}: {e}")
-
-                    i += 1
-                    print(f"value of i = {i}")
-                    all_chunks.extend(chunked_documents)
-                except Exception as e:
-                    print(f"Error processing file {file}: {e}")
+    for chunk in results:
+        all_chunks.extend(chunk)
 
     print(len(all_chunks))
     return all_chunks
