@@ -432,7 +432,7 @@ def generate_response_temp(query, retriever):
     try:
         docs = retriever.get_relevant_documents(query)
         rerank_docs = rerank_documents(query, docs)
-        rerank_docs = rerank_docs[:min(30, len(rerank_docs))]
+        rerank_docs = rerank_docs[:min(10, len(rerank_docs))]
         context = "\n".join([doc.page_content for doc in rerank_docs])
 
         # context = "\n\n".join([doc.page_content for doc in docs])
@@ -537,7 +537,7 @@ if submit_button and query:
             st.stop()
 
     with st.spinner("Generating response..."):
-        retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 35})
+        retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 20})
         response = generate_response_temp(query, retriever)
 
         with col2:
